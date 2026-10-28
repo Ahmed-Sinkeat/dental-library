@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.astro/
+.env
+.env.*
+channel/
+channel_r2/
+site/node_modules/
+*.log
+__pycache__/

@@ -1,0 +1,155 @@
+---
+import Icon from '../../components/Icon.astro';
+import { lessons, subjects, countTypes, formatSize, mediaUrl } from '../../data/catalog.mjs';
+import '../../styles/global.css';
+
+export function getStaticPaths() { return ['ar', 'en'].map(lang => ({ params: { lang } })); }
+const lang = Astro.params.lang === 'ar' ? 'ar' : 'en';
+const arabic = lang === 'ar';
+const text = arabic ? {
+  brand: 'مكتبة د. أحمد', brandSub: 'لطب الأسنان', library: 'مكتبة الدروس', references: 'المراجع العلمية', exams: 'الامتحانات السابقة', explore: 'اكتشف المكتبة', subjects: 'المواد الدراسية', allSubjects: 'جميع المواد', doctor: 'د. أحمد بدر الدين', role: 'جراحة الفم والوجه والفكين', open: 'معرفةٌ متاحة للجميع', hero: 'مساحة لتتعلّم،\nوتعود إليها.', intro: 'محاضرات وشروحات ومراجع طب الأسنان، مرتّبة لتجد ما تحتاج إليه. تعلّم على مهل، أينما كنت.', browse: 'تصفّح الدروس', telegram: 'القناة على تيليجرام', featured: 'ابدأ من الأساس', featuredTitle: 'الرأس والعنق.\nالصورة الأكبر.', featuredDescription: 'اربط التشريح بالممارسة السريرية.', featuredAction: 'اكتشف الدرس', catalog: 'تعلّم شيئًا جديدًا اليوم', catalogIntro: 'اختر مادة، أو ابحث عن الموضوع الذي يشغلك.', search: 'ابحث عن درس أو موضوع…', all: 'الكل', audio: 'شروحات صوتية', notes: 'ملاحظات وملفات', results: 'نتائج', preview: 'معاينة', lesson: 'استكشف الدرس', empty: 'لم نجد دروسًا بهذا البحث', emptyHelp: 'جرّب كلمة أخرى، أو أعد ضبط عوامل التصفية.', reset: 'إعادة ضبط البحث', files: 'ملفات', play: 'تشغيل', stop: 'إيقاف', download: 'تحميل', openFile: 'فتح', cantPlay: 'قد لا يدعم متصفحك هذا النوع. استخدم التحميل أو جرّب متصفح Chrome.', kinds: { audio: 'صوتي', video: 'فيديو', pdf: 'PDF', slides: 'شرائح', document: 'مستند', image: 'صورة', file: 'ملف' }, footer: 'لأن المعرفة تصبح أفضل عندما نشاركها.', public: 'دون حساب. للجميع.', materials: 'ملفات الدرس', source: 'فتح المصدر على تيليجرام', close: 'إغلاق', referenceIntro: 'الكتب والمراجع العلمية، كل كتاب بملفه.', examIntro: 'نماذج امتحانات سابقة في قسم مستقل لتسهيل المراجعة.', skip: 'انتقل إلى المحتوى', about: 'عن المكتبة', aboutBody: 'مكتبة تعليمية عامة تجمع دروس د. أحمد بدر الدين في طب الأسنان. تصفّح بالعربية أو الإنجليزية، وارجع إلى المادة التي تحتاج إليها دون تسجيل.', subjectLabel: 'المادة', formatLabel: 'نوع المحتوى', clear: 'مسح البحث',
+} : {
+  brand: 'Dr. Ahmed’s', brandSub: 'Dental library', library: 'Lesson library', references: 'Reference shelf', exams: 'Past exams', explore: 'Explore the library', subjects: 'Study subjects', allSubjects: 'All subjects', doctor: 'Dr. Ahmed Badr Eldin', role: 'Oral & maxillofacial surgery', open: 'Knowledge, open to everyone', hero: 'A place to learn.\nAnd come back to.', intro: 'Dental lectures, explanations, and references. Thoughtfully organized so you can find your next lesson and learn at your own pace.', browse: 'Explore the lessons', telegram: 'Find us on Telegram', featured: 'Start with the foundations', featuredTitle: 'Head & neck.\nThe bigger picture.', featuredDescription: 'Connect anatomy with clinical practice.', featuredAction: 'Explore this lesson', catalog: 'Make room for a little discovery', catalogIntro: 'Choose a subject, or find the topic on your mind.', search: 'Search lessons or topics…', all: 'Everything', audio: 'Audio lessons', notes: 'Notes & documents', results: 'results', preview: 'Preview', lesson: 'Explore lesson', empty: 'No lessons found', emptyHelp: 'Try a different word, or reset your filters.', reset: 'Reset search', files: 'files', play: 'Play', stop: 'Stop', download: 'Download', openFile: 'Open', cantPlay: 'This browser may not play this format. Use Download, or try Chrome.', kinds: { audio: 'audio', video: 'video', pdf: 'PDF', slides: 'slides', document: 'document', image: 'image', file: 'file' }, footer: 'Knowledge is better when we share it.', public: 'No account. Everyone welcome.', materials: 'Lesson files', source: 'Open the source on Telegram', close: 'Close', referenceIntro: 'Reference books and textbooks, one file each.', examIntro: 'Past papers, kept together to make revision a little easier.', skip: 'Skip to content', about: 'About the library', aboutBody: 'A public learning library bringing together Dr. Ahmed Badr Eldin’s dental lessons. Browse in Arabic or English and return to the material you need, without signing up.', subjectLabel: 'Subject', formatLabel: 'Content type', clear: 'Clear search',
+};
+const subjectOf = (id: string) => subjects.find(subject => subject.id === id)!;
+const summary = (lesson: (typeof lessons)[number]) => Object.entries(countTypes(lesson)).map(([type, n]) => `${n} ${text.kinds[type as keyof typeof text.kinds]}`).join(' · ');
+const playable = (type: string) => type === 'audio' || type === 'video';
+const ext = (name: string) => name.split('.').pop()!.toLowerCase();
+---
+<!doctype html>
+<html lang={lang} dir={arabic ? 'rtl' : 'ltr'}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={text.intro} />
+    <meta name="theme-color" content="#173e4c" />
+    <title>{text.brand} — {text.brandSub}</title>
+    <link rel="alternate" hreflang="ar" href="/ar/" />
+    <link rel="alternate" hreflang="en" href="/en/" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  </head>
+  <body>
+    <a class="skip" href="#content">{text.skip}</a>
+    <aside class="sidebar">
+      <a class="brand" href={`/${lang}/`} aria-label={`${text.brand} ${text.brandSub}`}><span class="brand-mark"><Icon name="tooth" size={28} /></span><span><strong>{text.brand}</strong><small>{text.brandSub}</small></span></a>
+      <nav aria-label={text.explore} class="main-nav">
+        <span class="nav-label">{text.explore}</span>
+        <button class="nav-item active" data-category="lesson" aria-pressed="true"><Icon name="grid" />{text.library}</button>
+        <button class="nav-item" data-category="reference" aria-pressed="false"><Icon name="book" />{text.references}</button>
+        <button class="nav-item" data-category="exam" aria-pressed="false"><Icon name="clipboard" />{text.exams}</button>
+      </nav>
+      <nav class="subject-nav" aria-label={text.subjects}>
+        <span class="nav-label">{text.subjects}</span>
+        {subjects.map(subject => <button class="subject-link" data-subject={subject.id} aria-pressed="false"><span class={`subject-dot ${subject.tone}`}></span>{subject[lang]}</button>)}
+      </nav>
+      <div class="sidebar-bottom"><span class="tiny-tooth"><Icon name="heart" size={19} /></span><p>{text.footer}</p><button class="quiet-link" data-open="about-dialog">{text.about}<Icon name="arrow" size={16} /></button></div>
+    </aside>
+    <div class="workspace">
+      <header class="topbar"><span class="topbar-title">{text.library}</span><div class="topbar-actions"><a class="language" href={`/${arabic ? 'en' : 'ar'}/`} lang={arabic ? 'en' : 'ar'}><Icon name="globe" size={18} />{arabic ? 'English' : 'العربية'}</a><span class="header-divider"></span><span class="avatar">AB</span><div class="doctor"><strong>{text.doctor}</strong><small>{text.role}</small></div></div></header>
+      <main id="content">
+        <section class="intro-grid" aria-labelledby="hero-title">
+          <div class="intro-copy"><p class="open-note"><span></span>{text.open}</p><h1 id="hero-title">{text.hero.split('\n').map(line => <span>{line}</span>)}</h1><p class="intro-description">{text.intro}</p><div class="hero-actions"><a class="button primary" href="#library">{text.browse}<Icon name="arrow" size={18} /></a><a class="telegram-link" href="https://t.me/dentistry20222" target="_blank" rel="noreferrer">{text.telegram}<Icon name="external" size={15} /></a></div></div>
+          <button class="featured" data-open="lesson-head-neck-anatomy-notes-and-revision">
+            <div class="featured-text"><span class="featured-label">{text.featured}</span><h2>{text.featuredTitle.split('\n').map(line => <span>{line}</span>)}</h2><p>{text.featuredDescription}</p><span class="featured-action">{text.featuredAction}<Icon name="arrow" size={17} /></span></div>
+            <svg class="anatomy-art" viewBox="0 0 260 280" fill="none" aria-hidden="true">
+              <ellipse cx="145" cy="140" rx="105" ry="113" stroke="#a2cbc5" stroke-dasharray="3 7" />
+              <ellipse cx="145" cy="140" rx="79" ry="89" fill="#c6e0da" opacity=".55" />
+              <g stroke="#316b69" stroke-width="1.5" stroke-linejoin="round">
+                <path d="M109 40c22-17 58-13 76 5 18 17 24 43 17 67l-11 27-3 21-17 9-9 20-25 8-24-14-7-17-17-5-8-21-11-21-7-30 8-30Z" fill="#eef6ed" />
+                <path d="m88 79 22-14 18 3 7 18-10 15-24-1-13-12Zm58-9 21-6 18 16-2 17-25 3-14-14Z" fill="#9ec5ba" />
+                <path d="m135 101-12 24 10 7 11-3-4-26Z" fill="#9ec5ba" />
+                <path d="m90 119 17 9 8 16 19 5 26-7 10-18 20-7M110 147l2 20 14 12 25-1 14-12 1-20" />
+                <path d="m115 151 6 2 1 17-6-4Zm8 2 7 1 1 20-7-3Zm9 1 7-1 1 21-7 1Zm9-1 7-2 1 21-7 2Zm9-3 7-2-1 21-5 3Zm9-3 6-2-2 18-5 6Z" fill="white" />
+                <path d="m103 163-12 8 9 24 29 21 30-5 20-22 11-33-11 9-11 25-18 9-20-1-17-12Z" fill="#e6f1e4" />
+                <path d="m129 217-1 28 24 13 21-9-15-38" fill="#d9eadd" />
+                <path d="m129 225 29-2m-30 11 35-2m-32 12 36-2M78 72l9-17 17-10m79 3 9 16M86 107l13 8m70-10 18-2" />
+              </g>
+              <g stroke="#619a92"><path d="M77 96H33m139 47h67m-82 91h64"/><circle cx="77" cy="96" r="3" fill="#619a92"/><circle cx="172" cy="143" r="3" fill="#619a92"/><circle cx="157" cy="234" r="3" fill="#619a92"/></g>
+              <g fill="#39716d" font-family="system-ui,sans-serif" font-size="9"><text x="15" y="88">01</text><text x="223" y="135">02</text><text x="211" y="226">03</text></g>
+            </svg>
+          </button>
+        </section>
+        <section id="library" class="library-section" aria-labelledby="library-title">
+          <div class="section-heading"><div><h2 id="library-title">{text.catalog}</h2><p id="catalog-intro">{text.catalogIntro}</p></div><span class="public-note"><Icon name="globe" size={16}/>{text.public}</span></div>
+          <div class="search-row"><label class="search-box"><Icon name="search" size={21}/><span class="sr-only">{text.search}</span><input id="search" type="search" placeholder={text.search} autocomplete="off" /><button id="clear-search" type="button" aria-label={text.clear} hidden><Icon name="close" size={16}/></button></label><label class="subject-select"><span class="sr-only">{text.subjectLabel}</span><select id="subject-filter"><option value="all">{text.allSubjects}</option>{subjects.map(subject => <option value={subject.id}>{subject[lang]}</option>)}</select></label></div>
+          <div class="filter-row"><div class="format-filters" role="group" aria-label={text.formatLabel}><button class="filter active" data-format="all" aria-pressed="true">{text.all}</button><button class="filter" data-format="audio" aria-pressed="false"><Icon name="headphones" size={16}/>{text.audio}</button><button class="filter" data-format="notes" aria-pressed="false"><Icon name="file" size={16}/>{text.notes}</button></div><span id="result-count" aria-live="polite" aria-atomic="true"></span></div>
+          <div class="lesson-grid">
+            {lessons.map(lesson => {
+              const subject = subjectOf(lesson.subject);
+              return <article class="lesson-card" data-lesson={lesson.id} hidden={lesson.category !== 'lesson'}><div class={`card-art ${subject.tone}`}><div class="art-orbit"></div><Icon name={lesson.icon} size={62}/><span class="art-corner"><Icon name={lesson.format === 'audio' ? 'headphones' : 'file'} size={17}/></span></div><div class="card-body"><span class={`card-subject ${subject.tone}`}>{subject[lang]}</span><h3><button data-open={`lesson-${lesson.id}`}>{lesson.title[lang]}</button></h3><p>{summary(lesson)}</p><div class="card-footer"><span><Icon name={lesson.format === 'audio' ? 'headphones' : 'file'} size={15}/>{lesson.attachments.length} {text.files}</span><button class="card-arrow" data-open={`lesson-${lesson.id}`} aria-label={`${text.lesson}: ${lesson.title[lang]}`}><Icon name="arrow" size={19}/></button></div></div></article>;
+            })}
+          </div>
+          <div id="empty-state" class="empty-state" hidden><Icon name="search" size={36}/><h3>{text.empty}</h3><p>{text.emptyHelp}</p><button id="reset" class="button primary">{text.reset}</button></div>
+        </section>
+        <footer class="page-footer"><span>{text.brand} · {text.brandSub}</span><span>{text.footer}<Icon name="heart" size={14}/></span></footer>
+      </main>
+    </div>
+    {lessons.map(lesson => { const subject = subjectOf(lesson.subject); return <dialog id={`lesson-${lesson.id}`} class="lesson-dialog" aria-labelledby={`title-${lesson.id}`}><div class={`dialog-banner ${subject.tone}`}><Icon name={lesson.icon} size={45}/><button class="dialog-close" data-close aria-label={text.close}><Icon name="close"/></button></div><div class="dialog-body"><span class="sample-label">{subject[lang]}</span><h2 id={`title-${lesson.id}`}>{lesson.title[lang]}</h2><p>{summary(lesson)}</p><h3>{text.materials}</h3><ul class="materials">{lesson.attachments.map(item => <li><Icon name={playable(item.type) ? 'headphones' : 'file'} size={20}/><span class="att-name" dir="auto">{item.name.replace(/\.[^.]+$/, '')}</span><small>{text.kinds[item.type as keyof typeof text.kinds]} · {formatSize(item.size)}</small><span class="att-actions">{playable(item.type) && <button type="button" class="att-play" data-play={mediaUrl(item.key)} data-kind={item.type} data-ext={ext(item.name)} data-play-label={text.play} data-stop-label={text.stop}>{text.play}</button>}<a class="att-dl" href={mediaUrl(item.key)} download={item.name} {...(item.type === 'pdf' || item.type === 'image' ? { target: '_blank', download: undefined } : {})}>{item.type === 'pdf' || item.type === 'image' ? text.openFile : text.download}</a></span><div class="att-player" hidden></div></li>)}</ul><a class="button primary source-link" href={`https://t.me/dentistry20222/${lesson.source}`} target="_blank" rel="noreferrer">{text.source}<Icon name="external" size={17}/></a></div></dialog>; })}
+    <dialog id="about-dialog" class="lesson-dialog" aria-labelledby="about-title"><div class="dialog-banner anatomy"><Icon name="book" size={40}/><button class="dialog-close" data-close aria-label={text.close}><Icon name="close"/></button></div><div class="dialog-body"><h2 id="about-title">{text.about}</h2><p>{text.aboutBody}</p></div></dialog>
+    <script is:inline id="page-copy" type="application/json" set:html={JSON.stringify({ results: text.results, titles: { lesson: text.catalog, reference: text.references, exam: text.exams }, descriptions: { lesson: text.catalogIntro, reference: text.referenceIntro, exam: text.examIntro }, cantPlay: text.cantPlay })} />
+    <script>
+      import { lessons, matchesLesson } from '../../data/catalog.mjs';
+      const search = document.querySelector<HTMLInputElement>('#search')!;
+      const subject = document.querySelector<HTMLSelectElement>('#subject-filter')!;
+      const clear = document.querySelector<HTMLButtonElement>('#clear-search')!;
+      const copy = JSON.parse(document.querySelector('#page-copy')!.textContent!);
+      let category = 'lesson';
+      let format = 'all';
+      const update = () => {
+        let count = 0;
+        document.querySelectorAll<HTMLElement>('[data-lesson]').forEach(card => {
+          const lesson = lessons.find(lesson => lesson.id === card.dataset.lesson)!;
+          card.hidden = !matchesLesson(lesson, search.value, subject.value, category, format);
+          if (!card.hidden) count++;
+        });
+        document.querySelector('#result-count')!.textContent = `${count} ${copy.results}`;
+        document.querySelector<HTMLElement>('#empty-state')!.hidden = count !== 0;
+        clear.hidden = search.value.length === 0;
+        document.querySelector('#library-title')!.textContent = copy.titles[category];
+        document.querySelector('#catalog-intro')!.textContent = copy.descriptions[category];
+        document.querySelector('.topbar-title')!.textContent = category === 'lesson' ? document.querySelector('[data-category="lesson"]')!.textContent : copy.titles[category];
+        document.querySelectorAll<HTMLButtonElement>('[data-subject]').forEach(button => { const active = button.dataset.subject === subject.value; button.classList.toggle('active', active); button.setAttribute('aria-pressed', String(active)); });
+        document.querySelectorAll<HTMLButtonElement>('[data-category]').forEach(button => { const active = button.dataset.category === category; button.classList.toggle('active', active); button.setAttribute('aria-pressed', String(active)); });
+        document.querySelectorAll<HTMLButtonElement>('[data-format]').forEach(button => { const active = button.dataset.format === format; button.classList.toggle('active', active); button.setAttribute('aria-pressed', String(active)); });
+        const language = document.querySelector<HTMLAnchorElement>('.language')!;
+        const params = new URLSearchParams({ category, subject: subject.value, format, q: search.value });
+        const suffix = `?${params}`;
+        language.href = `/${document.documentElement.lang === 'ar' ? 'en' : 'ar'}/${suffix}#library`;
+        history.replaceState(null, '', `${location.pathname}${suffix}${location.hash}`);
+      };
+      const initial = new URLSearchParams(location.search);
+      category = ['lesson', 'reference', 'exam'].includes(initial.get('category') || '') ? initial.get('category')! : 'lesson';
+      format = ['all', 'audio', 'notes'].includes(initial.get('format') || '') ? initial.get('format')! : 'all';
+      subject.value = initial.get('subject') || 'all';
+      if (!subject.value) subject.value = 'all';
+      search.value = initial.get('q') || '';
+      search.addEventListener('input', update);
+      subject.addEventListener('change', update);
+      clear.addEventListener('click', () => { search.value = ''; update(); search.focus(); });
+      document.querySelectorAll<HTMLButtonElement>('[data-category]').forEach(button => button.addEventListener('click', () => { category = button.dataset.category!; subject.value = 'all'; format = 'all'; search.value = ''; update(); document.querySelector('#library')!.scrollIntoView({ behavior: 'instant' }); }));
+      document.querySelectorAll<HTMLButtonElement>('[data-subject]').forEach(button => button.addEventListener('click', () => { subject.value = button.dataset.subject!; category = 'lesson'; update(); document.querySelector('#library')!.scrollIntoView({ behavior: 'instant' }); }));
+      document.querySelectorAll<HTMLButtonElement>('[data-format]').forEach(button => button.addEventListener('click', () => { format = button.dataset.format!; update(); }));
+      document.querySelector('#reset')!.addEventListener('click', () => { search.value = ''; subject.value = 'all'; format = 'all'; update(); search.focus(); });
+      document.querySelectorAll<HTMLButtonElement>('[data-open]').forEach(button => button.addEventListener('click', () => document.querySelector<HTMLDialogElement>(`#${button.dataset.open}`)!.showModal()));
+      document.querySelectorAll<HTMLDialogElement>('dialog').forEach(dialog => {
+        dialog.querySelector('[data-close]')!.addEventListener('click', () => dialog.close());
+        dialog.addEventListener('click', event => { const bounds = dialog.getBoundingClientRect(); if (event.target === dialog && (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom)) dialog.close(); });
+      });
+      const MIME: Record<string, string> = { opus: 'audio/ogg; codecs="opus"', ogg: 'audio/ogg', mp3: 'audio/mpeg', aac: 'audio/aac', m4a: 'audio/mp4', '3gpp': 'audio/3gpp' };
+      document.querySelectorAll<HTMLButtonElement>('[data-play]').forEach(button => button.addEventListener('click', () => {
+        const holder = button.closest('li')!.querySelector<HTMLElement>('.att-player')!;
+        if (!holder.hidden) { holder.replaceChildren(); holder.hidden = true; button.textContent = button.dataset.playLabel!; return; }
+        document.querySelectorAll<HTMLElement>('.att-player').forEach(other => { other.querySelector<HTMLMediaElement>('audio,video')?.pause(); other.replaceChildren(); other.hidden = true; });
+        document.querySelectorAll<HTMLButtonElement>('[data-play]').forEach(other => other.textContent = other.dataset.playLabel!);
+        const video = button.dataset.kind === 'video';
+        const media = document.createElement(video ? 'video' : 'audio');
+        media.controls = true; media.autoplay = true; media.preload = 'none'; media.setAttribute('playsinline', ''); media.src = button.dataset.play!;
+        const ok = video ? media.canPlayType('video/mp4; codecs="av01.0.05M.08, opus"') : media.canPlayType(MIME[button.dataset.ext!] || '');
+        holder.append(media);
+        if (!ok) { const note = document.createElement('p'); note.className = 'att-warn'; note.textContent = copy.cantPlay; holder.append(note); }
+        holder.hidden = false; button.textContent = button.dataset.stopLabel!;
+      }));
+      update();
+    </script>
+  </body>
+</html>
